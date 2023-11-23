@@ -1,0 +1,63 @@
+version: 2.1
+jobs:
+  build_and_deploy_master:
+    docker:
+      - image: cimg/base:stable
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build Docker image
+          command: docker build -t knight1988/cimg-dotnet-sdk:latest .
+      - run:
+          name: Login
+          command: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - run:
+          name: Push Docker image
+          command: docker push knight1988/cimg-dotnet-sdk:latest
+  build_and_deploy_release:
+    docker:
+      - image: cimg/base:stable
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Extract release version
+          command: |
+            TAG=$(echo $CIRCLE_BRANCH | sed 's/^release\///')
+            echo "Release version: $TAG"
+            echo "export TAG=$TAG" >> $BASH_ENV
+      - run:
+          name: Build Docker image
+          command: docker build -t knight1988/cimg-dotnet-sdk:$TAG .      
+      - run:
+          name: Login
+          command: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - run:
+          name: Push Docker image
+          command: docker push knight1988/cimg-dotnet-sdk:$TAG
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build_and_deploy_master:
+          filters:
+            branches:
+              only:
+                - master
+      - build_and_deploy_release:
+          filters:
+            branches:
+              only:
+                - /^release/\d+/
