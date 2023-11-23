@@ -1,5 +1,16 @@
 version: 2.1
-jobs:
+jobs:  
+  build:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build Docker image
+          command: docker build -t knight1988/cimg-dotnet-sdk:latest .
   build_and_deploy_main:
     docker:
       - image: cimg/base:stable
@@ -48,9 +59,15 @@ jobs:
           command: docker push knight1988/cimg-dotnet-sdk:$TAG
 
 workflows:
-  version: 2
-  build:
+  main:
     jobs:
+      - build:
+          context: DockerHub
+          filters:
+            branches:
+              ignore:
+                - main
+                - /^release/\d+/
       - build_and_deploy_main:
           context: DockerHub
           filters:
