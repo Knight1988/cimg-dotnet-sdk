@@ -9,7 +9,7 @@ RUN sudo apt-get update \
         software-properties-common
 
 # Download and install the Microsoft GPG key in /tmp
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /tmp/microsoft.asc
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /tmp/microsoft-archive-keyring.gpg
 
 # Move the GPG key to the appropriate directory
 RUN sudo mv /tmp/microsoft-archive-keyring.gpg /usr/share/keyrings/
